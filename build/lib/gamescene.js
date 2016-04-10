@@ -65,7 +65,9 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
       _this.entityIdCount = 0;
       _this.entityMap = {}; // entityId -> entityObject
 
+      _this.startTime = 0;
       _this.currentTick = 0;
+      _this.offsetTick = 0;
 
       _this.snapshots = [];
       _this.snapshotMap = {}; // optimization
@@ -81,12 +83,13 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         _this.lastTick = _this.currentTick;
         var interval = function () {
 
-          _this.currentTick = Math.floor((new Date().getTime() - _this.startTime) / TICKRATE);
+          _this.currentTick = _this.calculateTick();
           var _oldTick = _this.currentTick;
 
           if (_this.currentTick != _this.lastTick) {
 
-            console.log(_this.currentTick);
+            // console.log(this.currentTick);
+            // console.log((new Date()).getTime());
 
             var _currentTick = _this.currentTick;
             for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
@@ -121,7 +124,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
           event.spark.entId = playerId;
           event.spark.write({ type: 'possess', entId: playerId });
-          event.spark.write({ type: 'initialTick', startTime: _this.startTime });
+          event.spark.write({ type: 'initialTick', startTime: _this.startTime, realTimeStamp: new Date().getTime() });
 
           delete _this.snapshots;
           delete _this.snapshotMap;
@@ -135,6 +138,10 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           if (entity) {
             _this.remove(entity);
           }
+        });
+
+        network.addEventListener('syncTick1', function (event) {
+          event.spark.write({ type: 'syncTick1', realTimeStamp: new Date().getTime(), tick: _this.currentTick });
         });
 
         network.addEventListener('usermove', function (event) {
@@ -164,13 +171,22 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           global.localPlayer = entity;
         });
 
+        network.addEventListener('syncTick1', function (event) {
+          _this.startTime = new Date().getTime();
+          _this.offsetTick = event.tick + _this.calculateTick();
+        });
+
         network.addEventListener('initialTick', function (event) {
+          _this.firstTimeStamp = new Date().getTime();
+          primus.write({ type: 'syncTick1' });
+
           _this.startTime = event.startTime;
-          _this.currentTick = Math.floor((new Date().getTime() - event.startTime) / TICKRATE);
+          // this.startTime = (new Date()).getTime();
+          _this.currentTick = _this.calculateTick();
           _this.lastTick = _this.currentTick;
           var interval = function () {
 
-            _this.currentTick = Math.floor((new Date().getTime() - event.startTime) / TICKRATE);
+            _this.currentTick = _this.calculateTick();
             var _oldTick = _this.currentTick;
 
             if (_this.currentTick != _this.lastTick) {
@@ -178,7 +194,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
                 // this.applySnapshot(this.lastSnapshot);
               };
 
-              console.log(_this.currentTick);
+              // console.log(this.currentTick);
+              // console.log((new Date()).getTime());
 
               var _currentTick = _this.currentTick;
               for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
@@ -209,7 +226,6 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             _this.lastSnapshot = event.snapshot;
             _this.lastSnapshotTimestamp = event.snapshot.timestamp;
           }
-          console.log("lol");
         });
       }
 
@@ -389,6 +405,11 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         if (obj) {
           this.remove(obj);
         }
+      }
+    }, {
+      key: 'calculateTick',
+      value: function calculateTick() {
+        return Math.floor((new Date().getTime() - this.startTime) / TICKRATE) + this.offsetTick;
       }
     }]);
 
