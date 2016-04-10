@@ -1,3 +1,13 @@
+"use strict"
+
+global.SERVER = true;
+global.CLIENT = false;
+
+// ThreeJS
+var THREE = require('../bower_components/three.js/build/three.js');
+global.THREE = THREE;
+
+// Express
 var express = require('express');
 var app = express();
 
@@ -5,10 +15,49 @@ app.use(express.static('public'));
 app.use(express.static('bower_components'));
 app.use(express.static('build'));
 
-app.get('/', function (req, res) {
-  res.send('Hello Wor!ld?!');
+// Primus
+var Primus = require('primus');
+
+var server = require('http').createServer(app);
+var primus = new Primus(server, {'transformer': 'sockjs'});
+global.primus = primus;
+
+server.listen(3000, function () {
+  console.log('Listening on port 3000!');
 });
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!');
+var network = new THREE.EventDispatcher();
+global.network = network;
+
+var i = 0;
+
+primus.on('connection', function (spark) {
+
+  var event = {type: 'connection', spark: spark};
+  network.dispatchEvent(event);
+
+  spark.name = i;
+  i++;
+
+  spark.on('data', function (event) {
+    event.spark = spark;
+
+    if (!event.type) {
+      return;
+    }
+
+    network.dispatchEvent(event);
+
+  })
+
 });
+
+primus.on('disconnection', function (spark) {
+
+  var event = {type: 'disconnection', spark: spark};
+  network.dispatchEvent(event);
+
+});
+
+var GameMap = require('../lib/gamemap.js');
+require('../lib/chat.js');

@@ -1,2 +1,2 @@
-define(["./client/index.js"], function () {});
+define([], function () {});
 //# sourceMappingURL=client.js.map

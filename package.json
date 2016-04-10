@@ -22,6 +22,7 @@
     "express": "^4.13.4",
     "grunt-contrib-watch": "^1.0.0",
     "primus": "^5.0.1",
+    "sockjs": "^0.3.16",
     "webpack-dev-server": "^1.14.1"
   }
 }

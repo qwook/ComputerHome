@@ -1,9 +1,10 @@
+"use strict"
 
-import "../lib/gamemap.js"
+require('../lib/chat.js');
+require('../lib/gamemap.js');
 
 class TestClass {
   constructor() {
-    console.log("hey!");
   }
 }
 

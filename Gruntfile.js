@@ -44,7 +44,7 @@ module.exports = function(grunt) {
         'atBegin': true,
       },
       'dev': {
-        'files': ['lib/*', 'client/**/*.js', 'server/*', 'public/*', 'client.js', 'bower_components/*'],
+        'files': ['lib/*', 'client/**/*.js', 'server/*', 'public/*', 'bower_components/*'],
         'tasks': ['express:dev', 'babel'],
         'options': {
           'livereload': 35729,

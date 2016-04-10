@@ -1,10 +1,8 @@
-define(["../lib/gamemap.js"], function () {
+define(['../lib/chat.js', '../lib/gamemap.js'], function () {
   "use strict";
 
   class TestClass {
-    constructor() {
-      console.log("hey!");
-    }
+    constructor() {}
   }
 
   var test = new TestClass();
