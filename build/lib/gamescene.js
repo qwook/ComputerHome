@@ -53,7 +53,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
   var SNAPSHOTS = 100;
 
   if (CLIENT) {
-    SNAPSHOTS = 10;
+    SNAPSHOTS = 50;
   }
 
   var GameScene = function (_THREE$Scene) {
@@ -111,10 +111,15 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
               if (i % 10 == 0) {
                 // setTimeout(() => {
+                var last = _this.snapshots.length - 20;
+                if (last < 0) {
+                  last = 0;
+                }
+                var oldSnapshot = _this.snapshots[last];
                 primus.write({
                   type: 'tick',
-                  tick: i,
-                  snapshot: _this.serialize()
+                  tick: oldSnapshot.timestamp,
+                  snapshot: oldSnapshot
                 });
                 // }, 15);
               }
