@@ -5,7 +5,7 @@ var global = window;
 global.SERVER = false;
 global.CLIENT = true;
 
-var primus = new Primus('http://localhost:3000/');
+var primus = new Primus('http://localhost:3000/', {manual: true});
 global.primus = primus;
 
 var network = new THREE.EventDispatcher();

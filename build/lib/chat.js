@@ -3,9 +3,10 @@ define([], function () {
 
   if (CLIENT) {
 
+    // Sending a chat
     var chatForm = document.getElementsByClassName('chat-form')[0];
-
     chatForm.addEventListener('submit', function (event) {
+
       var text = chatForm.getElementsByClassName('chat-text')[0];
 
       primus.write({ type: 'chat', message: text.value });
@@ -14,6 +15,7 @@ define([], function () {
       event.preventDefault();
     });
 
+    // Adding chats to the Log
     var chatList = document.getElementsByClassName('chat')[0];
     network.addEventListener('receive', function (event) {
 
@@ -27,6 +29,7 @@ define([], function () {
     });
   } else {
 
+    // On receive chat, send it out
     network.addEventListener('chat', function (event) {
 
       primus.write({

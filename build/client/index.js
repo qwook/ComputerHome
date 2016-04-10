@@ -1,10 +1,23 @@
-define(['../lib/chat.js', '../lib/gamemap.js'], function () {
+define(['../lib/gamescene.js', '../lib/chat.js'], function (GameScene) {
   "use strict";
 
-  class TestClass {
-    constructor() {}
-  }
+  var scene = new GameScene();
 
-  var test = new TestClass();
+  var camera = new THREE.PerspectiveCamera(75, 1, 0.001, 1000);
+  camera.position.z = 3;
+  camera.position.y = -3;
+  camera.rotation.set(1, 0, 0);
+
+  // Set up rendering with THREEjs
+  var renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game') });
+  renderer.setSize(500, 500);
+
+  function render() {
+    requestAnimationFrame(render);
+    renderer.render(scene, camera);
+  }
+  render();
+
+  primus.open();
 });
 //# sourceMappingURL=index.js.map

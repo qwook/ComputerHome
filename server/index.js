@@ -33,11 +33,13 @@ var i = 0;
 
 primus.on('connection', function (spark) {
 
+  spark.name = i;
+  i++;
+
   var event = {type: 'connection', spark: spark};
   network.dispatchEvent(event);
 
-  spark.name = i;
-  i++;
+  console.log('connection! ' + spark.name);
 
   spark.on('data', function (event) {
     event.spark = spark;
@@ -59,5 +61,7 @@ primus.on('disconnection', function (spark) {
 
 });
 
-var GameMap = require('../lib/gamemap.js');
+var GameScene = require('../lib/gamescene.js');
 require('../lib/chat.js');
+
+var scene = new GameScene();
