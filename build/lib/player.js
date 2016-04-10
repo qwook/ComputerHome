@@ -61,28 +61,24 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
 
         if (ang < -Math.PI / 3 && ang > -Math.PI * 2 / 3) {
           return 'forward';
-          return;
         }
 
         if (ang > Math.PI / 3 && ang < Math.PI * 2 / 3) {
           return 'backward';
-          return;
         }
 
         if (ang > -Math.PI * 2 / 3 && ang < Math.PI * 2 / 3) {
           return 'right';
-          return;
         }
 
         if (ang < -Math.PI * 2 / 4 || ang > Math.PI * 2 / 4) {
           return 'left';
-          return;
         }
       };
 
       var clear = function () {
-        for (var k in localPlayer.localMove) {
-          localPlayer.localMove[k] = false;
+        for (var k in localPlayer.localMoveTmp) {
+          localPlayer.localMoveTmp[k] = false;
         }
       };
 
@@ -92,14 +88,14 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
       canvas.addEventListener('touchstart', function (event) {
         var key = keyByAngle(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
         clear();
-        localPlayer.localMove[key] = true;
+        localPlayer.localMoveTmp[key] = true;
         event.preventDefault();
       });
 
       canvas.addEventListener('touchmove', function (event) {
         var key = keyByAngle(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
         clear();
-        localPlayer.localMove[key] = true;
+        localPlayer.localMoveTmp[key] = true;
         event.preventDefault();
       });
 
@@ -113,7 +109,7 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
       canvas.addEventListener('mousedown', function (event) {
         var key = keyByAngle(event.pageX, event.pageY);
         clear();
-        localPlayer.localMove[key] = true;
+        localPlayer.localMoveTmp[key] = true;
         mdown = true;
         event.preventDefault();
       });
@@ -122,7 +118,7 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
         if (mdown) {
           var key = keyByAngle(event.pageX, event.pageY);
           clear();
-          localPlayer.localMove[key] = true;
+          localPlayer.localMoveTmp[key] = true;
         }
         event.preventDefault();
       });
@@ -140,16 +136,16 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
         }
 
         if (event.which == 38) {
-          localPlayer.localMove.forward = true;
+          localPlayer.localMoveTmp.forward = true;
           event.preventDefault();
         } else if (event.which == 40) {
-          localPlayer.localMove.backward = true;
+          localPlayer.localMoveTmp.backward = true;
           event.preventDefault();
         } else if (event.which == 37) {
-          localPlayer.localMove.left = true;
+          localPlayer.localMoveTmp.left = true;
           event.preventDefault();
         } else if (event.which == 39) {
-          localPlayer.localMove.right = true;
+          localPlayer.localMoveTmp.right = true;
           event.preventDefault();
         }
       });
@@ -160,13 +156,13 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
         }
 
         if (event.which == 38) {
-          localPlayer.localMove.forward = false;
+          localPlayer.localMoveTmp.forward = false;
         } else if (event.which == 40) {
-          localPlayer.localMove.backward = false;
+          localPlayer.localMoveTmp.backward = false;
         } else if (event.which == 37) {
-          localPlayer.localMove.left = false;
+          localPlayer.localMoveTmp.left = false;
         } else if (event.which == 39) {
-          localPlayer.localMove.right = false;
+          localPlayer.localMoveTmp.right = false;
         }
 
         event.preventDefault();
@@ -186,6 +182,13 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
       _this.dynamic = true;
 
       if (CLIENT) {
+        _this.localMoveTmp = {
+          forward: false,
+          backward: false,
+          left: false,
+          right: false
+        };
+
         _this.localMove = {
           forward: false,
           backward: false,
@@ -261,6 +264,9 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
           this.name.style.top = 500 - Math.floor((namePos.y + 1) / 2 * 500) + 'px';
 
           if (this == localPlayer) {
+            // for (var key in this.localMoveTmp) {
+            //   this.localMove[key] = this.localMoveTmp[key];
+            // }
             move = this.localMove;
           }
         }

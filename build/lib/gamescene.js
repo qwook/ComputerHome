@@ -49,8 +49,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 
-  var TICKRATE = 15;
-  var SNAPSHOTS = 30;
+  var TICKRATE = 20;
+  var SNAPSHOTS = 50;
 
   if (CLIENT) {
     SNAPSHOTS = 10;
@@ -109,12 +109,14 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               _this.update(TICKRATE / 1000);
               _this.pushSnapshot();
 
-              if (i % 5 == 0) {
+              if (i % 10 == 0) {
+                // setTimeout(() => {
                 primus.write({
                   type: 'tick',
                   tick: i,
-                  snapshot: _this.snapshots[_this.snapshots.length - 1]
+                  snapshot: _this.serialize()
                 });
+                // }, 15);
               }
             }
           }
@@ -160,23 +162,11 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
             if (_this.snapshotMap[snapshot.timestamp] && event.spark.entId && _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId] && _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId].vars) {
               _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId].vars.move = snapshot.move;
+            } else {
+              // console.log("invalid input" + snapshot.timestamp + " " + this.currentTick);
             }
           }
         });
-
-        // network.addEventListener('usermove', (event) => {
-        //   if (this.snapshotMap[event.tick] &&
-        //       event.spark.entId &&
-        //       this.snapshotMap[event.tick].entities[event.spark.entId] &&
-        //       this.snapshotMap[event.tick].entities[event.spark.entId].vars
-        //   ) {
-        //     this.snapshotMap[event.tick].entities[event.spark.entId].vars.move = event.move;
-        //   } else {
-        //     try {
-        //       this.snapshotMap[this.snapshotMap.length-1].entities[event.spark.entId].vars.move = event.move;
-        //     } catch (e) {}
-        //   }
-        // });
       }
 
       if (CLIENT) {
@@ -195,17 +185,9 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           global.localPlayer = entity;
         });
 
-        // network.addEventListener('syncTick1', (event) => {
-        // this.startTime = (new Date()).getTime();
-        // this.offsetTick = event.tick + this.calculateTick();
-        // });
-
         network.addEventListener('initialTick', function (event) {
-          // this.firstTimeStamp = (new Date()).getTime();
-          // primus.write({type: 'syncTick1'});
 
           _this.startTime = event.startTime;
-          // this.startTime = (new Date()).getTime();
           _this.currentTick = _this.calculateTick();
           _this.lastTick = _this.currentTick;
           var interval = function () {
@@ -217,14 +199,20 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
               var _currentTick = _this.currentTick;
 
-              _this.replayUser(_this.lastSnapshot);
-
               var c = 0;
               for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
                 c++;
                 if (c > 10) break;
 
                 _this.currentTick = i;
+
+                // copy system input and put it in actual
+                // calculated input
+                if (global.localPlayer) {
+                  for (var key in localPlayer.localMoveTmp) {
+                    localPlayer.localMove[key] = localPlayer.localMoveTmp[key];
+                  }
+                }
 
                 _this.update(TICKRATE / 1000);
 
@@ -234,12 +222,14 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
                   // console.log(localPlayer.localMove);
                   // primus.write({type: 'usermove', tick: this.currentTick, move: localPlayer.localMove});
                 }
-
-                if (i % 2 == 0) {
-                  primus.write({ type: 'usersnapshot', snapshots: _this.snapshots });
-                }
               }
+
+              // if (i % 2 == 0) {
+              primus.write({ type: 'usersnapshot', snapshots: _this.snapshots.slice(_this.snapshots.length - 20) });
+              // }
             }
+
+            // this.replayUser(this.lastSnapshot);
 
             _this.lastTick = _oldTick;
 
@@ -252,6 +242,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           if (event.snapshot.timestamp > _this.lastSnapshotTimestamp) {
             _this.lastSnapshot = event.snapshot;
             _this.lastSnapshotTimestamp = event.snapshot.timestamp;
+            _this.replayUser(_this.lastSnapshot);
           }
         });
       }
@@ -342,9 +333,12 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           if (!ignorePosition) {
             entity.position.set(serial.pos.x, serial.pos.y, serial.pos.z);
             entity.rotation.set(serial.rot.x, serial.rot.y, serial.rot.z);
+
+            delete entity.syncedVars;
+            entity.syncedVars = JSON.parse(JSON.stringify(serial.vars));
+          } else {
+            entity.syncedVars.move = serial.vars.move;
           }
-          delete entity.syncedVars;
-          entity.syncedVars = JSON.parse(JSON.stringify(serial.vars));
         }
 
         // deleted
@@ -360,6 +354,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         if (!snapshot) return;
 
         this.applySnapshot(snapshot);
+        this.updateMatrix();
+        this.updateMatrixWorld(true);
 
         if (this.snapshots.length == 0) return;
 
@@ -368,14 +364,14 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         var _currentTick = this.currentTick;
         var _localMove = localPlayer.localMove;
 
-        this.update(TICKRATE / 1000);
-
-        for (var i = snapshot.timestamp + 1; i < _currentTick; i++) {
+        for (var i = snapshot.timestamp + 1; i <= _currentTick; i++) {
 
           this.currentTick = i;
 
           if (this.snapshotMap[i]) {
             localPlayer.localMove = this.snapshotMap[i].move;
+          } else {
+            // console.log("lost packet " + i + " for " + snapshot.timestamp + " " + _currentTick);
           }
 
           this.update(TICKRATE / 1000);
