@@ -137,15 +137,17 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
 
         if (event.which == 38) {
           localPlayer.localMove.forward = true;
+          event.preventDefault();
         } else if (event.which == 40) {
           localPlayer.localMove.backward = true;
+          event.preventDefault();
         } else if (event.which == 37) {
           localPlayer.localMove.left = true;
+          event.preventDefault();
         } else if (event.which == 39) {
           localPlayer.localMove.right = true;
+          event.preventDefault();
         }
-
-        event.preventDefault();
       });
 
       document.addEventListener('keyup', function (event) {
@@ -225,10 +227,21 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
         _this.name.style.top = 10 + 'px';
         _this.name.style.left = 10 + 'px';
       }
+
+      _this.addEventListener('removed', function () {
+        _this.destroy();
+      });
       return _this;
     }
 
     _createClass(Player, [{
+      key: 'destroy',
+      value: function destroy() {
+        if (CLIENT) {
+          this.name.parentNode.removeChild(this.name);
+        }
+      }
+    }, {
       key: 'update',
       value: function update(delta) {
         var _this2 = this;
