@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../client/index.js"],"names":[],"mappings":";;;AAGA,QAAM,SAAN,CAAgB;AACd,kBAAc;AACZ,cAAQ,GAAR,CAAY,MAAZ,EADY;KAAd;GADF;;AAMA,MAAI,OAAO,IAAI,SAAJ,EAAP","file":"index.js","sourcesContent":["\nimport \"../lib/gamemap.js\"\n\nclass TestClass {\n  constructor() {\n    console.log(\"hey!\");\n  }\n}\n\nvar test = new TestClass();\n"]}

@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../lib/gamemap.js"],"names":[],"mappings":";AAAA;;AAEA,QAAM,OAAN,CAAc,EAAd;;AAIA,UAAQ,GAAR,CAAY,OAAZ","file":"gamemap.js","sourcesContent":["\"use strict\"\n\nclass GameMap {\n\n}\n\nconsole.log(\"hey!!\");\n"]}
