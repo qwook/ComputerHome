@@ -33,6 +33,21 @@
       border: 1px solid black;
       font-size: 12pt;
     }
+    .nametag {
+      font-family: 'Courier New';
+      text-shadow:
+      -1px -1px 0 #000,
+      1px -1px 0 #000,
+      -1px 1px 0 #000,
+      1px 1px 0 #000,
+      0px 1px 0 #000,
+      1px 0px 0 #000,
+      0px -1px 3 #000,
+      -1px 0px 3 #000;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      -webkit-transform: translate(-50%, -50%);
+    }
   </style>
 </head>
 <body>
@@ -48,6 +63,7 @@
   <script src="//localhost:35729/livereload.js"></script>
   <script type="text/javascript" src="primus/primus.js"></script>
   <script type="text/javascript" src="three.js/build/three.js"></script>
+  <script type="text/javascript" src="three.js/examples/js/renderers/Projector.js"></script>
   <script type="text/javascript" src="client.js"></script>
   <script type="text/javascript" data-main="client/index.js" src="requirejs/require.js"></script>
 </body>

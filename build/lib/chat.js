@@ -26,6 +26,10 @@ define([], function () {
       listing.appendChild(message);
 
       chatList.appendChild(listing);
+
+      if (event.entId && game && game.findEntityById(event.entId)) {
+        game.findEntityById(event.entId).name.textContent = event.message;
+      }
     });
   } else {
 
@@ -34,6 +38,7 @@ define([], function () {
 
       primus.write({
         name: event.spark.name,
+        entId: event.spark.entId,
         type: 'receive',
         message: event.message
       });
