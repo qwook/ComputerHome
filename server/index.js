@@ -49,9 +49,9 @@ primus.on('connection', function (spark) {
     }
 
     // network.dispatchEvent(event);
-    setTimeout(function() {
+    // setTimeout(function() {
       network.dispatchEvent(event);
-    }, 200);
+    // }, 200);
 
   })
 
