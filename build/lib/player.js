@@ -1,6 +1,54 @@
 define(['module', './gamemeta.js'], function (module, gameMeta) {
   "use strict";
 
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var _createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
   // Player control
   if (CLIENT) {
 
@@ -37,25 +85,29 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
     });
   }
 
-  class Player extends THREE.Object3D {
-    constructor() {
-      super();
+  var Player = function (_THREE$Object3D) {
+    _inherits(Player, _THREE$Object3D);
 
-      this.entId = null;
-      this.dynamic = true;
+    function Player() {
+      _classCallCheck(this, Player);
+
+      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Player).call(this));
+
+      _this.entId = null;
+      _this.dynamic = true;
 
       if (CLIENT) {
-        this.localMove = {
+        _this.localMove = {
           forward: false,
           backward: false,
           left: false,
           right: false
         };
 
-        this.snapshots = {};
+        _this.snapshots = {};
       }
 
-      this.syncedVars = {
+      _this.syncedVars = {
         move: {
           forward: false,
           backward: false,
@@ -65,89 +117,96 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
       };
 
       var geometry = new THREE.BoxGeometry(1, 1, 1);
-      var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      var material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
       var cube = new THREE.Mesh(geometry, material);
       cube.position.z += 1;
-      this.add(cube);
+      _this.add(cube);
 
       if (CLIENT) {
-        this.name = document.createElement('div');
-        document.body.appendChild(this.name);
-        this.name.className = 'nametag';
-        this.name.style.position = 'absolute';
-        this.name.style.top = 10 + 'px';
-        this.name.style.left = 10 + 'px';
+        _this.name = document.createElement('div');
+        document.body.appendChild(_this.name);
+        _this.name.className = 'nametag';
+        _this.name.style.position = 'absolute';
+        _this.name.style.top = 10 + 'px';
+        _this.name.style.left = 10 + 'px';
       }
+      return _this;
     }
 
-    update(delta) {
+    _createClass(Player, [{
+      key: 'update',
+      value: function update(delta) {
+        var _this2 = this;
 
-      var move = this.syncedVars.move;
+        var move = this.syncedVars.move;
 
-      if (CLIENT) {
-        var namePos3D = this.position.clone();
-        namePos3D.z += 2;
-        var namePos = calc3Dto2D(namePos3D);
-        // console.log(namePos);
-        this.name.style.left = Math.floor((namePos.x + 1) / 2 * 500) + 'px';
-        this.name.style.top = 500 - Math.floor((namePos.y + 1) / 2 * 500) + 'px';
+        if (CLIENT) {
+          var namePos3D = this.position.clone();
+          namePos3D.z += 2;
+          var namePos = calc3Dto2D(namePos3D);
+          // console.log(namePos);
+          this.name.style.left = Math.floor((namePos.x + 1) / 2 * 500) + 'px';
+          this.name.style.top = 500 - Math.floor((namePos.y + 1) / 2 * 500) + 'px';
 
-        if (this == localPlayer) {
-          move = this.localMove;
-          primus.write({ type: 'usermove', tick: game.currentTick, move: this.localMove });
-          // console.log("move");
+          if (this == localPlayer) {
+            move = this.localMove;
+            primus.write({ type: 'usermove', tick: game.currentTick, move: this.localMove });
+            // console.log("move");
+          }
         }
-      }
 
-      var collide = false;
-      game.traverse(entity => {
-        if (entity == this || collide || !entity.dynamic) {
+        var collide = false;
+        game.traverse(function (entity) {
+          if (entity == _this2 || collide || !entity.dynamic) {
+            return;
+          }
+
+          var distance = entity.position.distanceTo(_this2.position);
+
+          var push = new THREE.Vector3().subVectors(entity.position, _this2.position);
+          push.normalize();
+          push.multiplyScalar(2 * delta);
+
+          // opposite push
+          var opush = push.clone();
+          opush.multiplyScalar(-1);
+
+          if (distance == 0) {
+            entity.position.add(new THREE.Vector3(1, 1, 0));
+          }
+
+          if (distance < 1) {
+            entity.position.add(push);
+            collide = true;
+          }
+        });
+
+        if (collide) {
           return;
         }
 
-        var distance = entity.position.distanceTo(this.position);
-
-        var push = new THREE.Vector3().subVectors(entity.position, this.position);
-        push.normalize();
-        push.multiplyScalar(2 * delta);
-
-        // opposite push
-        var opush = push.clone();
-        opush.multiplyScalar(-1);
-
-        if (distance == 0) {
-          entity.position.add(new THREE.Vector3(1, 1, 0));
+        if (move.forward) {
+          this.position.x += Math.cos(this.rotation.z) * 2 * delta;
+          this.position.y += Math.sin(this.rotation.z) * 2 * delta;
         }
 
-        if (distance < 1) {
-          entity.position.add(push);
-          collide = true;
+        if (move.backward) {
+          this.position.x -= Math.cos(this.rotation.z) * 2 * delta;
+          this.position.y -= Math.sin(this.rotation.z) * 2 * delta;
         }
-      });
 
-      if (collide) {
-        return;
-      }
+        if (move.left) {
+          this.rotation.z += 3 * delta;
+        }
 
-      if (move.forward) {
-        this.position.x += Math.cos(this.rotation.z) * 2 * delta;
-        this.position.y += Math.sin(this.rotation.z) * 2 * delta;
+        if (move.right) {
+          this.rotation.z -= 3 * delta;
+        }
       }
+    }]);
 
-      if (move.backward) {
-        this.position.x -= Math.cos(this.rotation.z) * 2 * delta;
-        this.position.y -= Math.sin(this.rotation.z) * 2 * delta;
-      }
-
-      if (move.left) {
-        this.rotation.z += 3 * delta;
-      }
-
-      if (move.right) {
-        this.rotation.z -= 3 * delta;
-      }
-    }
-  }
+    return Player;
+  }(THREE.Object3D);
 
   gameMeta.registerClass("Player", Player);
   module.exports = Player;
