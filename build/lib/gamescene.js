@@ -92,7 +92,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               _this.update(TICKRATE / 1000);
               _this.pushSnapshot();
 
-              if (i % 40) {
+              if (i % 10 == 0) {
                 primus.write({
                   type: 'tick',
                   tick: i,
@@ -159,6 +159,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           _this.lastTick = _this.currentTick;
           var interval = function () {
 
+            console.log("yo");
             _this.currentTick = Math.floor((new Date().getTime() - event.startTime) / TICKRATE) - 3;
             if (_this.currentTick != _this.lastTick) {
               if (_this.lastSnapshot) {
@@ -168,7 +169,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               var _currentTick = _this.currentTick;
               for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
                 _this.currentTick = i;
-                // this.update(TICKRATE / 1000);
+                _this.update(TICKRATE / 1000);
 
                 _this.pushSnapshot();
                 _this.replayUser(_this.lastSnapshot);
@@ -192,6 +193,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             _this.lastSnapshot = event.snapshot;
             _this.lastSnapshotTimestamp = event.snapshot.timestamp;
           }
+          console.log("lol");
         });
       }
 
@@ -290,6 +292,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     }, {
       key: 'replayUser',
       value: function replayUser(snapshot) {
+        if (!snapshot) return;
+
         this.applySnapshot(snapshot);
 
         if (this.snapshots.length == 0) return;
