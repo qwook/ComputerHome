@@ -50,7 +50,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
   }
 
   var TICKRATE = 20;
-  var SNAPSHOTS = 50;
+  var SNAPSHOTS = 100;
 
   if (CLIENT) {
     SNAPSHOTS = 10;
@@ -448,7 +448,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         if (SERVER) {
           return Math.floor((new Date().getTime() - this.startTime) / TICKRATE) + this.offsetTick;
         } else {
-          return Math.floor((ts.now() - this.startTime) / TICKRATE) + this.offsetTick;
+          return Math.floor((ts.now() - this.startTime) / TICKRATE) + this.offsetTick - 10;
         }
       }
     }]);
