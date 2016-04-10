@@ -1,6 +1,7 @@
 "use strict"
 
 require('../lib/chat.js');
+require('../lib/timesync.js');
 
 var GameScene = require('../lib/gamescene.js');
 var scene = new GameScene();

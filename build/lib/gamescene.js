@@ -140,9 +140,9 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           }
         });
 
-        network.addEventListener('syncTick1', function (event) {
-          event.spark.write({ type: 'syncTick1', realTimeStamp: new Date().getTime(), tick: _this.currentTick });
-        });
+        // network.addEventListener('syncTick1', (event) => {
+        //   event.spark.write({type: 'syncTick1', realTimeStamp: (new Date()).getTime(), tick: this.currentTick});
+        // });
 
         network.addEventListener('usermove', function (event) {
           if (_this.snapshotMap[event.tick] && event.spark.entId && _this.snapshotMap[event.tick].entities[event.spark.entId] && _this.snapshotMap[event.tick].entities[event.spark.entId].vars) {
@@ -171,14 +171,14 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           global.localPlayer = entity;
         });
 
-        network.addEventListener('syncTick1', function (event) {
-          _this.startTime = new Date().getTime();
-          _this.offsetTick = event.tick + _this.calculateTick();
-        });
+        // network.addEventListener('syncTick1', (event) => {
+        // this.startTime = (new Date()).getTime();
+        // this.offsetTick = event.tick + this.calculateTick();
+        // });
 
         network.addEventListener('initialTick', function (event) {
-          _this.firstTimeStamp = new Date().getTime();
-          primus.write({ type: 'syncTick1' });
+          // this.firstTimeStamp = (new Date()).getTime();
+          // primus.write({type: 'syncTick1'});
 
           _this.startTime = event.startTime;
           // this.startTime = (new Date()).getTime();
@@ -409,7 +409,11 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     }, {
       key: 'calculateTick',
       value: function calculateTick() {
-        return Math.floor((new Date().getTime() - this.startTime) / TICKRATE) + this.offsetTick;
+        if (SERVER) {
+          return Math.floor((new Date().getTime() - this.startTime) / TICKRATE) + this.offsetTick;
+        } else {
+          return Math.floor((ts.now() - this.startTime) / TICKRATE) + this.offsetTick;
+        }
       }
     }]);
 

@@ -29,6 +29,7 @@
     "grunt-express-server": "^0.5.2",
     "primus": "^5.0.1",
     "sockjs": "^0.3.16",
+    "timesync": "^0.2.0",
     "ws": "^1.0.1"
   },
   "engines": {

@@ -15,6 +15,11 @@ app.use(express.static('public'));
 app.use(express.static('bower_components'));
 app.use(express.static('build'));
 
+var timesyncServer = require('timesync/server');
+app.use('/timesync', timesyncServer.requestHandler);
+
+global.app = app;
+
 // Primus
 var Primus = require('primus');
 

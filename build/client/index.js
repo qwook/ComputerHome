@@ -1,4 +1,4 @@
-define(['../lib/gamescene.js', '../lib/chat.js'], function (GameScene) {
+define(['../lib/gamescene.js', '../lib/chat.js', '../lib/timesync.js'], function (GameScene) {
   "use strict";
 
   var scene = new GameScene();
