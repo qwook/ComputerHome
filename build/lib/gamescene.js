@@ -96,10 +96,15 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             // console.log((new Date()).getTime());
 
             var _currentTick = _this.currentTick;
-            for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
-              _this.currentTick = i;
 
-              _this.replaySnapshots();
+            _this.replaySnapshots();
+
+            var c = 0;
+            for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
+              c++;
+              if (c > 10) return;
+
+              _this.currentTick = i;
 
               _this.update(TICKRATE / 1000);
               _this.pushSnapshot();
@@ -209,18 +214,17 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             var _oldTick = _this.currentTick;
 
             if (_this.currentTick != _this.lastTick) {
-              if (_this.lastSnapshot) {
-                // this.applySnapshot(this.lastSnapshot);
-              };
-
-              // console.log(this.currentTick);
-              // console.log((new Date()).getTime());
 
               var _currentTick = _this.currentTick;
-              for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
-                _this.currentTick = i;
 
-                _this.replayUser(_this.lastSnapshot);
+              _this.replayUser(_this.lastSnapshot);
+
+              var c = 0;
+              for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
+                c++;
+                if (c > 10) return;
+
+                _this.currentTick = i;
 
                 _this.update(TICKRATE / 1000);
 
@@ -231,7 +235,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
                   // primus.write({type: 'usermove', tick: this.currentTick, move: localPlayer.localMove});
                 }
 
-                if (i % 10 == 0) {
+                if (i % 2 == 0) {
                   primus.write({ type: 'usersnapshot', snapshots: _this.snapshots });
                 }
               }
@@ -364,7 +368,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         var _currentTick = this.currentTick;
         var _localMove = localPlayer.localMove;
 
-        for (var i = snapshot.timestamp; i <= _currentTick; i++) {
+        for (var i = snapshot.timestamp; i < _currentTick; i++) {
 
           this.currentTick = i;
 
