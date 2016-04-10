@@ -1,7 +1,7 @@
 define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, Player) {
   "use strict";
 
-  var TICKRATE = 100;
+  var TICKRATE = 10;
   var SNAPSHOTS = 5;
 
   class GameScene extends THREE.Scene {

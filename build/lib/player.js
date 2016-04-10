@@ -83,24 +83,52 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
         }
       }
 
-      if (SERVER) {
-        if (move.forward) {
-          this.position.x += Math.cos(this.rotation.z) * 2 * delta;
-          this.position.y += Math.sin(this.rotation.z) * 2 * delta;
+      var collide = false;
+      game.traverse(entity => {
+        if (entity == this || collide || !entity.dynamic) {
+          return;
         }
 
-        if (move.backward) {
-          this.position.x -= Math.cos(this.rotation.z) * 2 * delta;
-          this.position.y -= Math.sin(this.rotation.z) * 2 * delta;
+        var distance = entity.position.distanceTo(this.position);
+
+        var push = new THREE.Vector3().subVectors(entity.position, this.position);
+        push.normalize();
+        push.multiplyScalar(2 * delta);
+
+        // opposite push
+        var opush = push.clone();
+        opush.multiplyScalar(-1);
+
+        if (distance == 0) {
+          entity.position.add(new THREE.Vector3(1, 1, 0));
         }
 
-        if (move.left) {
-          this.rotation.z += 3 * delta;
+        if (distance < 1) {
+          entity.position.add(push);
+          collide = true;
         }
+      });
 
-        if (move.right) {
-          this.rotation.z -= 3 * delta;
-        }
+      if (collide) {
+        return;
+      }
+
+      if (move.forward) {
+        this.position.x += Math.cos(this.rotation.z) * 2 * delta;
+        this.position.y += Math.sin(this.rotation.z) * 2 * delta;
+      }
+
+      if (move.backward) {
+        this.position.x -= Math.cos(this.rotation.z) * 2 * delta;
+        this.position.y -= Math.sin(this.rotation.z) * 2 * delta;
+      }
+
+      if (move.left) {
+        this.rotation.z += 3 * delta;
+      }
+
+      if (move.right) {
+        this.rotation.z -= 3 * delta;
       }
     }
   }
