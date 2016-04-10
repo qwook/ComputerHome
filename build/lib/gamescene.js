@@ -102,14 +102,14 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             var c = 0;
             for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
               c++;
-              if (c > 10) return;
+              if (c > 10) break;
 
               _this.currentTick = i;
 
               _this.update(TICKRATE / 1000);
               _this.pushSnapshot();
 
-              if (i % 10 == 0) {
+              if (i % 5 == 0) {
                 primus.write({
                   type: 'tick',
                   tick: i,
@@ -222,7 +222,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               var c = 0;
               for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
                 c++;
-                if (c > 10) return;
+                if (c > 10) break;
 
                 _this.currentTick = i;
 
@@ -368,7 +368,9 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         var _currentTick = this.currentTick;
         var _localMove = localPlayer.localMove;
 
-        for (var i = snapshot.timestamp; i < _currentTick; i++) {
+        this.update(TICKRATE / 1000);
+
+        for (var i = snapshot.timestamp + 1; i < _currentTick; i++) {
 
           this.currentTick = i;
 
@@ -378,8 +380,6 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
           this.update(TICKRATE / 1000);
         }
-
-        this.updateMatrixWorld();
 
         localPlayer.localMove = _localMove;
         this.currentTick = _currentTick;
