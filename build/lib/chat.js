@@ -3,6 +3,8 @@ define([], function () {
 
   if (CLIENT) {
 
+    global.canvas = document.getElementById('game');
+
     // Sending a chat
     var chatForm = document.getElementsByClassName('chat-form')[0];
     chatForm.addEventListener('submit', function (event) {

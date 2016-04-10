@@ -51,38 +51,121 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
 
   // Player control
   if (CLIENT) {
+    var mdown;
 
-    document.addEventListener('keydown', function (event) {
-      if (!global.localPlayer) {
-        return;
-      }
+    (function () {
+      var keyByAngle = function (x, y) {
+        var ang = Math.atan2(y - 250 - 10, x - 250 - 10);
+        // console.log(ang);
 
-      if (event.which == 38) {
-        localPlayer.localMove.forward = true;
-      } else if (event.which == 40) {
-        localPlayer.localMove.backward = true;
-      } else if (event.which == 37) {
-        localPlayer.localMove.left = true;
-      } else if (event.which == 39) {
-        localPlayer.localMove.right = true;
-      }
-    });
+        if (ang < -Math.PI / 3 && ang > -Math.PI * 2 / 3) {
+          return 'forward';
+          return;
+        }
 
-    document.addEventListener('keyup', function (event) {
-      if (!global.localPlayer) {
-        return;
-      }
+        if (ang > Math.PI / 3 && ang < Math.PI * 2 / 3) {
+          return 'backward';
+          return;
+        }
 
-      if (event.which == 38) {
-        localPlayer.localMove.forward = false;
-      } else if (event.which == 40) {
-        localPlayer.localMove.backward = false;
-      } else if (event.which == 37) {
-        localPlayer.localMove.left = false;
-      } else if (event.which == 39) {
-        localPlayer.localMove.right = false;
-      }
-    });
+        if (ang > -Math.PI * 2 / 3 && ang < Math.PI * 2 / 3) {
+          return 'right';
+          return;
+        }
+
+        if (ang < -Math.PI * 2 / 4 || ang > Math.PI * 2 / 4) {
+          return 'left';
+          return;
+        }
+      };
+
+      var clear = function () {
+        for (var k in localPlayer.localMove) {
+          localPlayer.localMove[k] = false;
+        }
+      };
+
+      canvas.addEventListener('touchstart', function (event) {
+        var key = keyByAngle(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
+        clear();
+        localPlayer.localMove[key] = true;
+        event.preventDefault();
+      });
+
+      canvas.addEventListener('touchmove', function (event) {
+        var key = keyByAngle(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
+        clear();
+        localPlayer.localMove[key] = true;
+        event.preventDefault();
+      });
+
+      canvas.addEventListener('touchend', function (event) {
+        clear();
+        event.preventDefault();
+      });
+
+      mdown = false;
+
+      canvas.addEventListener('mousedown', function (event) {
+        var key = keyByAngle(event.pageX, event.pageY);
+        clear();
+        localPlayer.localMove[key] = true;
+        mdown = true;
+        event.preventDefault();
+      });
+
+      canvas.addEventListener('mousemove', function (event) {
+        if (mdown) {
+          var key = keyByAngle(event.pageX, event.pageY);
+          clear();
+          localPlayer.localMove[key] = true;
+        }
+        event.preventDefault();
+      });
+
+      canvas.addEventListener('mouseup', function (event) {
+        console.log('up');
+        mdown = false;
+        clear();
+        event.preventDefault();
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (!global.localPlayer) {
+          return;
+        }
+
+        if (event.which == 38) {
+          localPlayer.localMove.forward = true;
+        } else if (event.which == 40) {
+          localPlayer.localMove.backward = true;
+        } else if (event.which == 37) {
+          localPlayer.localMove.left = true;
+        } else if (event.which == 39) {
+          localPlayer.localMove.right = true;
+        }
+
+        event.preventDefault();
+      });
+
+      document.addEventListener('keyup', function (event) {
+        if (!global.localPlayer) {
+          return;
+        }
+
+        if (event.which == 38) {
+          localPlayer.localMove.forward = false;
+        } else if (event.which == 40) {
+          localPlayer.localMove.backward = false;
+        } else if (event.which == 37) {
+          localPlayer.localMove.left = false;
+        } else if (event.which == 39) {
+          localPlayer.localMove.right = false;
+        }
+
+        event.preventDefault();
+      });
+    })();
   }
 
   var Player = function (_THREE$Object3D) {
@@ -121,6 +204,18 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
       var cube = new THREE.Mesh(geometry, material);
       cube.position.z += 1;
       _this.add(cube);
+
+      if (CLIENT) {
+        var texture = new THREE.TextureLoader().load("danny.jpg");
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        var geometryFace = new THREE.BoxGeometry(0.5, 0.1, 0.5);
+        var materialFace = new THREE.MeshBasicMaterial({ color: 0xffffff, map: texture });
+        var cubeFace = new THREE.Mesh(geometryFace, materialFace);
+        cubeFace.position.y -= 0.5;
+        cubeFace.position.z += 1;
+        _this.add(cubeFace);
+      }
 
       if (CLIENT) {
         _this.name = document.createElement('div');
@@ -184,13 +279,13 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
         }
 
         if (move.forward) {
-          this.position.x += Math.cos(this.rotation.z) * 5 * delta;
-          this.position.y += Math.sin(this.rotation.z) * 5 * delta;
+          this.position.x += Math.cos(this.rotation.z - Math.PI / 2) * 5 * delta;
+          this.position.y += Math.sin(this.rotation.z - Math.PI / 2) * 5 * delta;
         }
 
         if (move.backward) {
-          this.position.x -= Math.cos(this.rotation.z) * 5 * delta;
-          this.position.y -= Math.sin(this.rotation.z) * 5 * delta;
+          this.position.x -= Math.cos(this.rotation.z - Math.PI / 2) * 5 * delta;
+          this.position.y -= Math.sin(this.rotation.z - Math.PI / 2) * 5 * delta;
         }
 
         if (move.left) {

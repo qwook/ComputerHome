@@ -232,6 +232,12 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
       // Create static elements!
       var geometry = new THREE.BoxGeometry(5, 5, 0.1);
       var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      if (CLIENT) {
+        var texture = new THREE.TextureLoader().load("danny.jpg");
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        material.map = texture;
+      }
       var cube = new THREE.Mesh(geometry, material);
       cube.position.z = 0;
       _this.add(cube);
@@ -385,6 +391,14 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             entity.update(delta);
           }
         });
+
+        if (CLIENT && global.localPlayer) {
+
+          var offset = new THREE.Vector3(0, -3, 3);
+          var pos = global.localPlayer.position.clone();
+          pos.add(offset);
+          global.camera.position.copy(pos);
+        }
 
         this.updateMatrix();
         this.updateMatrixWorld(true);
