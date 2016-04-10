@@ -69,7 +69,7 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
     });
 
     document.addEventListener('keyup', function (event) {
-      if (!localPlayer) {
+      if (!global.localPlayer) {
         return;
       }
 
@@ -150,8 +150,6 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
 
           if (this == localPlayer) {
             move = this.localMove;
-            primus.write({ type: 'usermove', tick: game.currentTick, move: this.localMove });
-            // console.log("move");
           }
         }
 
@@ -186,21 +184,21 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
         }
 
         if (move.forward) {
-          this.position.x += Math.cos(this.rotation.z) * 2 * delta;
-          this.position.y += Math.sin(this.rotation.z) * 2 * delta;
+          this.position.x += Math.cos(this.rotation.z) * 5 * delta;
+          this.position.y += Math.sin(this.rotation.z) * 5 * delta;
         }
 
         if (move.backward) {
-          this.position.x -= Math.cos(this.rotation.z) * 2 * delta;
-          this.position.y -= Math.sin(this.rotation.z) * 2 * delta;
+          this.position.x -= Math.cos(this.rotation.z) * 5 * delta;
+          this.position.y -= Math.sin(this.rotation.z) * 5 * delta;
         }
 
         if (move.left) {
-          this.rotation.z += 3 * delta;
+          this.rotation.z += 4 * delta;
         }
 
         if (move.right) {
-          this.rotation.z -= 3 * delta;
+          this.rotation.z -= 4 * delta;
         }
       }
     }]);

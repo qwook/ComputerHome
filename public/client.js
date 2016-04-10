@@ -18,5 +18,7 @@ primus.on('open', function () {
 
 primus.on('data', function (event) {
   event.spark = primus;
-  network.dispatchEvent(event);
+  // setTimeout(function() {
+    network.dispatchEvent(event);
+  // }, 100);
 });

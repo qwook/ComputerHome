@@ -137,6 +137,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
       if (CLIENT) {
 
+        _this.lastSnapshotTimestamp = 0;
+
         // Possess a local player!
         network.addEventListener('possess', function (event) {
           var entity = _this.findEntityById(event.entId);
@@ -157,10 +159,19 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
             _this.currentTick = Math.floor((new Date().getTime() - event.startTime) / TICKRATE) - 3;
             if (_this.currentTick != _this.lastTick) {
+              if (_this.lastSnapshot) {
+                _this.replayUser(_this.lastSnapshot);
+              };
+
               var _currentTick = _this.currentTick;
               for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
                 _this.currentTick = i;
+                _this.pushSnapshot();
                 _this.update(TICKRATE / 1000);
+
+                if (global.localPlayer) {
+                  primus.write({ type: 'usermove', tick: _this.currentTick, move: localPlayer.localMove });
+                }
               }
             }
 
@@ -172,7 +183,9 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         });
 
         network.addEventListener('tick', function (event) {
-          _this.applySnapshot(event.snapshot);
+          if (event.snapshot.timestamp > _this.lastSnapshotTimestamp) {
+            _this.lastSnapshot = event.snapshot;
+          }
         });
       }
 
@@ -188,7 +201,14 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     _createClass(GameScene, [{
       key: 'pushSnapshot',
       value: function pushSnapshot() {
-        var snapshot = this.serialize(true);
+        var snapshot;
+
+        if (SERVER) {
+          snapshot = this.serialize(true);
+        } else if (global.localPlayer) {
+          snapshot = { timestamp: this.currentTick, move: JSON.parse(JSON.stringify(localPlayer.localMove)) };
+        }
+
         this.snapshots.push(snapshot);
         this.snapshotMap[snapshot.timestamp] = snapshot;
 
@@ -263,7 +283,31 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
       }
     }, {
       key: 'replayUser',
-      value: function replayUser() {}
+      value: function replayUser(snapshot) {
+        this.applySnapshot(snapshot);
+
+        if (this.snapshots.length == 0) return;
+
+        if (!global.localPlayer) return;
+
+        var _currentTick = this.currentTick;
+        var _localMove = localPlayer.localMove;
+
+        for (var i = snapshot.timestamp; i < _currentTick; i++) {
+
+          this.currentTick = i;
+
+          if (this.snapshotMap[i]) {
+            // console.log("replay"+ i);
+            localPlayer.localMove = this.snapshotMap[i].move;
+          }
+
+          this.update(TICKRATE / 1000);
+        }
+
+        localPlayer.localMove = _localMove;
+        this.currentTick = _currentTick;
+      }
     }, {
       key: 'replaySnapshots',
       value: function replaySnapshots() {
