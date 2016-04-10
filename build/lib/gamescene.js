@@ -49,8 +49,12 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 
-  var TICKRATE = 20;
-  var SNAPSHOTS = 20;
+  var TICKRATE = 15;
+  var SNAPSHOTS = 30;
+
+  if (CLIENT) {
+    SNAPSHOTS = 10;
+  }
 
   var GameScene = function (_THREE$Scene) {
     _inherits(GameScene, _THREE$Scene);
@@ -144,15 +148,30 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         //   event.spark.write({type: 'syncTick1', realTimeStamp: (new Date()).getTime(), tick: this.currentTick});
         // });
 
-        network.addEventListener('usermove', function (event) {
-          if (_this.snapshotMap[event.tick] && event.spark.entId && _this.snapshotMap[event.tick].entities[event.spark.entId] && _this.snapshotMap[event.tick].entities[event.spark.entId].vars) {
-            _this.snapshotMap[event.tick].entities[event.spark.entId].vars.move = event.move;
-          } else {
-            try {
-              _this.snapshotMap[_this.snapshotMap.length - 1].entities[event.spark.entId].vars.move = event.move;
-            } catch (e) {}
+        network.addEventListener('usersnapshot', function (event) {
+
+          for (var i in event.snapshots) {
+            var snapshot = event.snapshots[i];
+
+            if (_this.snapshotMap[snapshot.timestamp] && event.spark.entId && _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId] && _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId].vars) {
+              _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId].vars.move = snapshot.move;
+            }
           }
         });
+
+        // network.addEventListener('usermove', (event) => {
+        //   if (this.snapshotMap[event.tick] &&
+        //       event.spark.entId &&
+        //       this.snapshotMap[event.tick].entities[event.spark.entId] &&
+        //       this.snapshotMap[event.tick].entities[event.spark.entId].vars
+        //   ) {
+        //     this.snapshotMap[event.tick].entities[event.spark.entId].vars.move = event.move;
+        //   } else {
+        //     try {
+        //       this.snapshotMap[this.snapshotMap.length-1].entities[event.spark.entId].vars.move = event.move;
+        //     } catch (e) {}
+        //   }
+        // });
       }
 
       if (CLIENT) {
@@ -209,7 +228,11 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
                 if (global.localPlayer) {
                   // console.log(localPlayer.localMove);
-                  primus.write({ type: 'usermove', tick: _this.currentTick, move: localPlayer.localMove });
+                  // primus.write({type: 'usermove', tick: this.currentTick, move: localPlayer.localMove});
+                }
+
+                if (i % 10 == 0) {
+                  primus.write({ type: 'usersnapshot', snapshots: _this.snapshots });
                 }
               }
             }
@@ -346,7 +369,6 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           this.currentTick = i;
 
           if (this.snapshotMap[i]) {
-            // console.log("replay"+ i);
             localPlayer.localMove = this.snapshotMap[i].move;
           }
 

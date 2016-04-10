@@ -51,6 +51,7 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
 
   // Player control
   if (CLIENT) {
+    var canvas;
     var mdown;
 
     (function () {
@@ -84,6 +85,9 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
           localPlayer.localMove[k] = false;
         }
       };
+
+      canvas = document.getElementById('game');
+
 
       canvas.addEventListener('touchstart', function (event) {
         var key = keyByAngle(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
