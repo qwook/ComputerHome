@@ -19,7 +19,7 @@ app.use(express.static('build'));
 var Primus = require('primus');
 
 var server = require('http').createServer(app);
-var primus = new Primus(server, {'transformer': 'sockjs'});
+var primus = new Primus(server, {'transformer': 'websockets'});
 global.primus = primus;
 
 server.listen(process.env.PORT || 3000, function () {
@@ -48,10 +48,10 @@ primus.on('connection', function (spark) {
       return;
     }
 
-    network.dispatchEvent(event);
-    // setTimeout(function() {
-    //   network.dispatchEvent(event);
-    // }, 200);
+    // network.dispatchEvent(event);
+    setTimeout(function() {
+      network.dispatchEvent(event);
+    }, 200);
 
   })
 

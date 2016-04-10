@@ -28,7 +28,8 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-express-server": "^0.5.2",
     "primus": "^5.0.1",
-    "sockjs": "^0.3.16"
+    "sockjs": "^0.3.16",
+    "ws": "^1.0.1"
   },
   "engines": {
     "node": "4.1.1"

@@ -50,7 +50,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
   }
 
   var TICKRATE = 20;
-  var SNAPSHOTS = 100;
+  var SNAPSHOTS = 20;
 
   var GameScene = function (_THREE$Scene) {
     _inherits(GameScene, _THREE$Scene);
@@ -82,13 +82,18 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         var interval = function () {
 
           _this.currentTick = Math.floor((new Date().getTime() - _this.startTime) / TICKRATE);
+          var _oldTick = _this.currentTick;
 
           if (_this.currentTick != _this.lastTick) {
-            _this.replaySnapshots();
+
+            console.log(_this.currentTick);
 
             var _currentTick = _this.currentTick;
             for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
               _this.currentTick = i;
+
+              _this.replaySnapshots();
+
               _this.update(TICKRATE / 1000);
               _this.pushSnapshot();
 
@@ -102,9 +107,11 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             }
           }
 
-          _this.lastTick = _this.currentTick;
+          _this.lastTick = _oldTick;
+
+          setImmediate(interval);
         };
-        setInterval(interval, 1);
+        interval();
 
         // Someone has connected! Give them a player entity.
         network.addEventListener('connection', function (event) {
@@ -133,6 +140,10 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         network.addEventListener('usermove', function (event) {
           if (_this.snapshotMap[event.tick] && event.spark.entId && _this.snapshotMap[event.tick].entities[event.spark.entId] && _this.snapshotMap[event.tick].entities[event.spark.entId].vars) {
             _this.snapshotMap[event.tick].entities[event.spark.entId].vars.move = event.move;
+          } else {
+            try {
+              _this.snapshotMap[_this.snapshotMap.length - 1].entities[event.spark.entId].vars.move = event.move;
+            } catch (e) {}
           }
         });
       }
@@ -155,24 +166,29 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
         network.addEventListener('initialTick', function (event) {
           _this.startTime = event.startTime;
-          _this.currentTick = Math.floor((new Date().getTime() - event.startTime) / TICKRATE) - 3;
+          _this.currentTick = Math.floor((new Date().getTime() - event.startTime) / TICKRATE);
           _this.lastTick = _this.currentTick;
           var interval = function () {
 
-            console.log("yo");
-            _this.currentTick = Math.floor((new Date().getTime() - event.startTime) / TICKRATE) - 3;
+            _this.currentTick = Math.floor((new Date().getTime() - event.startTime) / TICKRATE);
+            var _oldTick = _this.currentTick;
+
             if (_this.currentTick != _this.lastTick) {
               if (_this.lastSnapshot) {
                 // this.applySnapshot(this.lastSnapshot);
               };
 
+              console.log(_this.currentTick);
+
               var _currentTick = _this.currentTick;
               for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
                 _this.currentTick = i;
+
+                _this.replayUser(_this.lastSnapshot);
+
                 _this.update(TICKRATE / 1000);
 
                 _this.pushSnapshot();
-                _this.replayUser(_this.lastSnapshot);
 
                 if (global.localPlayer) {
                   // console.log(localPlayer.localMove);
@@ -181,7 +197,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               }
             }
 
-            _this.lastTick = _this.currentTick;
+            _this.lastTick = _oldTick;
 
             requestAnimationFrame(interval);
           };
