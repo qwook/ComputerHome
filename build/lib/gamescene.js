@@ -50,7 +50,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
   }
 
   var TICKRATE = 20;
-  var SNAPSHOTS = 50;
+  var SNAPSHOTS = 100;
 
   var GameScene = function (_THREE$Scene) {
     _inherits(GameScene, _THREE$Scene);
@@ -91,13 +91,15 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               _this.currentTick = i;
               _this.update(TICKRATE / 1000);
               _this.pushSnapshot();
-            }
 
-            primus.write({
-              type: 'tick',
-              tick: _this.currentTick,
-              snapshot: _this.snapshots[_this.snapshots.length - 1]
-            });
+              if (i % 40) {
+                primus.write({
+                  type: 'tick',
+                  tick: i,
+                  snapshot: _this.snapshots[_this.snapshots.length - 1]
+                });
+              }
+            }
           }
 
           _this.lastTick = _this.currentTick;
