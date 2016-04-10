@@ -49,8 +49,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 
-  var TICKRATE = 10;
-  var SNAPSHOTS = 150;
+  var TICKRATE = 20;
+  var SNAPSHOTS = 50;
 
   var GameScene = function (_THREE$Scene) {
     _inherits(GameScene, _THREE$Scene);
@@ -130,7 +130,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
         network.addEventListener('usermove', function (event) {
           if (_this.snapshotMap[event.tick] && event.spark.entId && _this.snapshotMap[event.tick].entities[event.spark.entId] && _this.snapshotMap[event.tick].entities[event.spark.entId].vars) {
-            _this.snapshotMap[event.tick].entities[event.spark.entId].vars.move = JSON.parse(JSON.stringify(event.move));
+            _this.snapshotMap[event.tick].entities[event.spark.entId].vars.move = event.move;
           }
         });
       }
@@ -160,16 +160,19 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             _this.currentTick = Math.floor((new Date().getTime() - event.startTime) / TICKRATE) - 3;
             if (_this.currentTick != _this.lastTick) {
               if (_this.lastSnapshot) {
-                _this.replayUser(_this.lastSnapshot);
+                // this.applySnapshot(this.lastSnapshot);
               };
 
               var _currentTick = _this.currentTick;
               for (var i = _this.lastTick + 1; i <= _currentTick; i++) {
                 _this.currentTick = i;
+                // this.update(TICKRATE / 1000);
+
                 _this.pushSnapshot();
-                _this.update(TICKRATE / 1000);
+                _this.replayUser(_this.lastSnapshot);
 
                 if (global.localPlayer) {
+                  // console.log(localPlayer.localMove);
                   primus.write({ type: 'usermove', tick: _this.currentTick, move: localPlayer.localMove });
                 }
               }
@@ -185,6 +188,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         network.addEventListener('tick', function (event) {
           if (event.snapshot.timestamp > _this.lastSnapshotTimestamp) {
             _this.lastSnapshot = event.snapshot;
+            _this.lastSnapshotTimestamp = event.snapshot.timestamp;
           }
         });
       }
@@ -293,7 +297,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
         var _currentTick = this.currentTick;
         var _localMove = localPlayer.localMove;
 
-        for (var i = snapshot.timestamp; i < _currentTick; i++) {
+        for (var i = snapshot.timestamp; i <= _currentTick; i++) {
 
           this.currentTick = i;
 
@@ -304,6 +308,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
           this.update(TICKRATE / 1000);
         }
+
+        this.updateMatrixWorld();
 
         localPlayer.localMove = _localMove;
         this.currentTick = _currentTick;
