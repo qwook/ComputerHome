@@ -16,28 +16,12 @@ module.exports = function(grunt) {
         }]
       }
     },
-    'connect': {
-      'dev': {
-        'options': {
-          'hostname': '*',
-          'base': ['public/', 'build/', 'bower_components/'],
-          'port': '8080',
-        }
-      }
-    },
-    'execute': {
-      'dev': {
-        'src': ['server/index.js']
-      }
-    },
     'express': {
-      'options': {
-      },
       'dev': {
         'options': {
           'script': 'server/index.js'
         }
-      },
+      }
     },
     'watch': {
       'options': {
@@ -55,11 +39,10 @@ module.exports = function(grunt) {
   })
 
   grunt.loadNpmTasks('grunt-babel');
-  grunt.loadNpmTasks('grunt-execute');
   grunt.loadNpmTasks('grunt-express-server');
-  grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
   grunt.registerTask('default', ['watch:dev']);
+  grunt.registerTask('heroku', ['babel', 'execute:dev'])
 
 }
