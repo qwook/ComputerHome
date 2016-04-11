@@ -15,6 +15,13 @@ global.camera = camera;
 var projector = new THREE.Projector()
 global.projector = projector;
 
+var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+scene.add( light );
+
+var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+directionalLight.position.set( 0.3, -1, 0.5 );
+scene.add( directionalLight );
+
 // todo: have util functions
 global.calc3Dto2D = function (vector) {
   return vector.clone().project(camera);

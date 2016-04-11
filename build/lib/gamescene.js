@@ -49,7 +49,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 
-  var TICKRATE = 20;
+  var TICKRATE = 15;
   var SNAPSHOTS = 100;
 
   if (CLIENT) {
@@ -162,14 +162,22 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
         network.addEventListener('usersnapshot', function (event) {
 
+          var snapshotMap = {};
+
           for (var i in event.snapshots) {
             var snapshot = event.snapshots[i];
+            snapshotMap[snapshot.timestamp] = snapshot.move;
 
             if (_this.snapshotMap[snapshot.timestamp] && event.spark.entId && _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId] && _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId].vars) {
               _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId].vars.move = snapshot.move;
             } else {
               // console.log("invalid input" + snapshot.timestamp + " " + this.currentTick);
             }
+          }
+
+          var entity = _this.findEntityById(event.spark.entId);
+          if (entity) {
+            entity.snapshotMap = snapshotMap;
           }
         });
       }
@@ -253,10 +261,10 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
       }
 
       // Create static elements!
-      var geometry = new THREE.BoxGeometry(5, 5, 0.1);
+      var geometry = new THREE.BoxGeometry(20, 20, 0.1);
       var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
       if (CLIENT) {
-        var texture = new THREE.TextureLoader().load("danny.jpg");
+        var texture = new THREE.TextureLoader().load("grass.png");
         texture.minFilter = THREE.NearestFilter;
         texture.magFilter = THREE.NearestFilter;
         material.map = texture;
@@ -299,7 +307,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
       }
     }, {
       key: 'serialize',
-      value: function serialize(ignoreMove) {
+      value: function serialize() {
         var serial = {
           timestamp: this.currentTick,
           entities: {}
@@ -313,7 +321,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               className: entity.className,
               vars: JSON.parse(JSON.stringify(entity.syncedVars)), // deep copy
               pos: pos,
-              rot: rot
+              rot: rot,
+              snapshotMap: entity.snapshotMap
             };
           }
         });
@@ -333,6 +342,10 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           if (!entity) {
             entity = gameMeta.createClass(serial.className);
             this.addEntId(entity, i);
+          }
+
+          if (CLIENT) {
+            entity.snapshotMap = serial.snapshotMap;
           }
 
           if (!ignorePosition) {
@@ -414,6 +427,20 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
       key: 'update',
       value: function update(delta) {
         this.traverse(function (entity) {
+          if (CLIENT) {
+            if (entity.className === 'Player' && entity != global.localPlayer) {
+              // console.log(entity.snapshotMap);
+              // for (var i = 0; i < 1; i++) {
+              // if (entity.snapshotMap && entity.snapshotMap[this.currentTick]) {
+              // entity.localMove = entity.snapshotMap[this.currentTick-20];
+              entity.localMove = {};
+              // console.log(entity.localMove);
+              // break;
+              // }
+              // }
+            }
+          }
+
           if (entity.dynamic && entity.update) {
             entity.update(delta);
           }

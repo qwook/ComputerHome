@@ -209,9 +209,9 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
       };
 
       var geometry = new THREE.BoxGeometry(1, 1, 1);
-      var material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+      var material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
       var cube = new THREE.Mesh(geometry, material);
-      cube.position.z += 1;
+      cube.position.z += 0.5;
       _this.add(cube);
 
       if (CLIENT) {
@@ -219,11 +219,13 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
         texture.minFilter = THREE.NearestFilter;
         texture.magFilter = THREE.NearestFilter;
         var geometryFace = new THREE.BoxGeometry(0.5, 0.1, 0.5);
-        var materialFace = new THREE.MeshBasicMaterial({ color: 0xffffff, map: texture });
+        var materialFace = new THREE.MeshLambertMaterial({ color: 0xffffff, map: texture });
         var cubeFace = new THREE.Mesh(geometryFace, materialFace);
         cubeFace.position.y -= 0.5;
-        cubeFace.position.z += 1;
+        cubeFace.position.z += 0.8;
         _this.add(cubeFace);
+
+        material.map = texture;
       }
 
       if (CLIENT) {
@@ -263,12 +265,12 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
           this.name.style.left = Math.floor((namePos.x + 1) / 2 * 500) + 'px';
           this.name.style.top = 500 - Math.floor((namePos.y + 1) / 2 * 500) + 'px';
 
-          if (this == localPlayer) {
-            // for (var key in this.localMoveTmp) {
-            //   this.localMove[key] = this.localMoveTmp[key];
-            // }
-            move = this.localMove;
-          }
+          // if (this == localPlayer) {       
+          // for (var key in this.localMoveTmp) {
+          //   this.localMove[key] = this.localMoveTmp[key];
+          // }
+          move = this.localMove;
+          // }
         }
 
         var collide = false;
