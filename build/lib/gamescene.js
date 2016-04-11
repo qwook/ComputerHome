@@ -163,11 +163,11 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
         network.addEventListener('usersnapshot', function (event) {
 
-          var snapshotMap = {};
+          // var snapshotMap = {};
 
           for (var i in event.snapshots) {
             var snapshot = event.snapshots[i];
-            snapshotMap[snapshot.timestamp] = snapshot.move;
+            // snapshotMap[snapshot.timestamp] = snapshot.move;
 
             if (_this.snapshotMap[snapshot.timestamp] && event.spark.entId && _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId] && _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId].vars) {
               _this.snapshotMap[snapshot.timestamp].entities[event.spark.entId].vars.move = snapshot.move;
@@ -176,10 +176,10 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             }
           }
 
-          var entity = _this.findEntityById(event.spark.entId);
-          if (entity) {
-            entity.snapshotMap = snapshotMap;
-          }
+          // var entity = this.findEntityById(event.spark.entId);
+          // if (entity) {
+          //   entity.snapshotMap = snapshotMap;
+          // }
         });
       }
 
@@ -227,6 +227,37 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
                     localPlayer.localMove[key] = localPlayer.localMoveTmp[key];
                   }
                 }
+
+                _this.traverse(function (entity) {
+                  if (entity.className === 'Player' && entity != global.localPlayer) {
+                    // console.log(entity.snapshotMap);
+                    // for (var i = 0; i < 1; i++) {
+                    // if (entity.snapshotMap && entity.snapshotMap[this.currentTick]) {
+                    // entity.localMove = entity.snapshotMap[this.currentTick-20];
+                    var progress = (_this.currentTick - _this.lastSnapshotReceiveTime) / (_this.snapshotLength || SNAPSHOT_SEND_MOD);
+                    if (progress < 0) {
+                      progress = 0;
+                    }
+                    if (progress > 1) {
+                      progress = 1;
+                    }
+                    // progress = 0.5;
+
+                    var netRotation = new THREE.Quaternion();
+                    netRotation.setFromEuler(entity.netRotation);
+                    entity.position.copy(entity.oldPosition);
+                    entity.quaternion.copy(entity.oldRotation);
+                    entity.position.lerp(entity.netPosition, progress);
+                    entity.quaternion.slerp(netRotation, progress);
+                    entity.localMove = {};
+
+                    entity.updateMatrixWorld(true);
+                    // console.log(entity.localMove);
+                    // break;
+                    // }
+                    // }
+                  }
+                });
 
                 _this.update(TICKRATE / 1000);
 
@@ -326,8 +357,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               className: entity.className,
               vars: JSON.parse(JSON.stringify(entity.syncedVars)), // deep copy
               pos: pos,
-              rot: rot,
-              snapshotMap: entity.snapshotMap
+              rot: rot
             };
           }
         });
@@ -349,9 +379,9 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
             this.addEntId(entity, i);
           }
 
-          if (CLIENT) {
-            entity.snapshotMap = serial.snapshotMap;
-          }
+          // if (CLIENT) {
+          //   entity.snapshotMap = serial.snapshotMap;
+          // }
 
           if (!ignorePosition) {
             if (CLIENT && entity != localPlayer) {
@@ -444,41 +474,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     }, {
       key: 'update',
       value: function update(delta) {
-        var _this2 = this;
-
         this.traverse(function (entity) {
-          if (CLIENT) {
-            if (entity.className === 'Player' && entity != global.localPlayer) {
-              // console.log(entity.snapshotMap);
-              // for (var i = 0; i < 1; i++) {
-              // if (entity.snapshotMap && entity.snapshotMap[this.currentTick]) {
-              // entity.localMove = entity.snapshotMap[this.currentTick-20];
-              var progress = (_this2.currentTick - _this2.lastSnapshotReceiveTime) / (_this2.snapshotLength || SNAPSHOT_SEND_MOD);
-              if (progress < 0) {
-                progress = 0;
-              }
-              if (progress > 1) {
-                progress = 1;
-              }
-              // progress = 0.5;
-              // console.log(progress);
-
-              var netRotation = new THREE.Quaternion();
-              netRotation.setFromEuler(entity.netRotation);
-              entity.position.copy(entity.oldPosition);
-              entity.quaternion.copy(entity.oldRotation);
-              entity.position.lerp(entity.netPosition, progress);
-              entity.quaternion.slerp(netRotation, progress);
-              entity.localMove = {};
-
-              entity.updateMatrixWorld(true);
-              // console.log(entity.localMove);
-              // break;
-              // }
-              // }
-            }
-          }
-
           if (entity.dynamic && entity.update) {
             entity.update(delta);
           }
