@@ -49,12 +49,12 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 
-  var TICKRATE = 15;
+  var TICKRATE = 20;
   var SNAPSHOTS = 100;
   var SNAPSHOT_SEND_MOD = 10;
 
   if (CLIENT) {
-    SNAPSHOTS = 50;
+    SNAPSHOTS = 100;
   }
 
   var GameScene = function (_THREE$Scene) {
@@ -112,7 +112,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
               if (i % SNAPSHOT_SEND_MOD == 0) {
                 // setTimeout(() => {
-                var last = _this.snapshots.length - 20;
+                var last = _this.snapshots.length - 30;
                 if (last < 0) {
                   last = 0;
                 }
@@ -229,6 +229,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
                 }
 
                 _this.traverse(function (entity) {
+
                   if (entity.className === 'Player' && entity != global.localPlayer) {
                     // console.log(entity.snapshotMap);
                     // for (var i = 0; i < 1; i++) {
