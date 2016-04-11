@@ -208,6 +208,12 @@ define(['module', './gamemeta.js'], function (module, gameMeta) {
         }
       };
 
+      _this.oldPosition = new THREE.Vector3();
+      _this.oldRotation = new THREE.Quaternion();
+
+      _this.netPosition = new THREE.Vector3();
+      _this.netRotation = new THREE.Euler();
+
       var geometry = new THREE.BoxGeometry(1, 1, 1);
       var material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
       var cube = new THREE.Mesh(geometry, material);

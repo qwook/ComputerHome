@@ -51,6 +51,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
 
   var TICKRATE = 15;
   var SNAPSHOTS = 100;
+  var SNAPSHOT_SEND_MOD = 10;
 
   if (CLIENT) {
     SNAPSHOTS = 50;
@@ -109,7 +110,7 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               _this.update(TICKRATE / 1000);
               _this.pushSnapshot();
 
-              if (i % 10 == 0) {
+              if (i % SNAPSHOT_SEND_MOD == 0) {
                 // setTimeout(() => {
                 var last = _this.snapshots.length - 20;
                 if (last < 0) {
@@ -251,11 +252,15 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           interval();
         });
 
+        // we received a snapshot
         network.addEventListener('tick', function (event) {
           if (event.snapshot.timestamp > _this.lastSnapshotTimestamp) {
+            _this.replayUser(event.snapshot);
+            if (_this.lastSnapshot) {
+              _this.snapshotLength = event.snapshot.timestamp - _this.lastSnapshot.timestamp;
+            }
             _this.lastSnapshot = event.snapshot;
             _this.lastSnapshotTimestamp = event.snapshot.timestamp;
-            _this.replayUser(_this.lastSnapshot);
           }
         });
       }
@@ -349,8 +354,19 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
           }
 
           if (!ignorePosition) {
-            entity.position.set(serial.pos.x, serial.pos.y, serial.pos.z);
-            entity.rotation.set(serial.rot.x, serial.rot.y, serial.rot.z);
+            if (CLIENT && entity != localPlayer) {
+              if (this.lastSnapshot && this.lastSnapshot.entities[i]) {
+                entity.oldPosition.copy(this.lastSnapshot.entities[i].pos);
+                var rot = new THREE.Euler();
+                rot.set(this.lastSnapshot.entities[i].rot.x, this.lastSnapshot.entities[i].rot.y, this.lastSnapshot.entities[i].rot.z);
+                entity.oldRotation.setFromEuler(rot);
+              }
+              entity.netPosition.set(serial.pos.x, serial.pos.y, serial.pos.z);
+              entity.netRotation.set(serial.rot.x, serial.rot.y, serial.rot.z);
+            } else {
+              entity.position.set(serial.pos.x, serial.pos.y, serial.pos.z);
+              entity.rotation.set(serial.rot.x, serial.rot.y, serial.rot.z);
+            }
 
             delete entity.syncedVars;
             entity.syncedVars = JSON.parse(JSON.stringify(serial.vars));
@@ -370,6 +386,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
       key: 'replayUser',
       value: function replayUser(snapshot) {
         if (!snapshot) return;
+
+        this.lastSnapshotReceiveTime = this.currentTick;
 
         this.applySnapshot(snapshot);
         this.updateMatrix();
@@ -426,6 +444,8 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
     }, {
       key: 'update',
       value: function update(delta) {
+        var _this2 = this;
+
         this.traverse(function (entity) {
           if (CLIENT) {
             if (entity.className === 'Player' && entity != global.localPlayer) {
@@ -433,7 +453,25 @@ define(['module', './gamemeta.js', './player.js'], function (module, gameMeta, P
               // for (var i = 0; i < 1; i++) {
               // if (entity.snapshotMap && entity.snapshotMap[this.currentTick]) {
               // entity.localMove = entity.snapshotMap[this.currentTick-20];
+              var progress = (_this2.currentTick - _this2.lastSnapshotReceiveTime) / (_this2.snapshotLength || SNAPSHOT_SEND_MOD);
+              if (progress < 0) {
+                progress = 0;
+              }
+              if (progress > 1) {
+                progress = 1;
+              }
+              // progress = 0.5;
+              // console.log(progress);
+
+              var netRotation = new THREE.Quaternion();
+              netRotation.setFromEuler(entity.netRotation);
+              entity.position.copy(entity.oldPosition);
+              entity.quaternion.copy(entity.oldRotation);
+              entity.position.lerp(entity.netPosition, progress);
+              entity.quaternion.slerp(netRotation, progress);
               entity.localMove = {};
+
+              entity.updateMatrixWorld(true);
               // console.log(entity.localMove);
               // break;
               // }
